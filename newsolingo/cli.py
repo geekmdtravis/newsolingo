@@ -293,81 +293,124 @@ def run_session(
     llm_client: LLMClient,
     db: Database,
     source_registry: SourceRegistry,
+    url: str | None = None,
+    language: str | None = None,
+    subject: str | None = None,
 ) -> None:
     """Run a single interactive practice session."""
-    # Step 1: Language selection
-    available_languages = list(config.languages.keys())
-    if not available_languages:
-        console.print(
-            "[red]No languages configured. Add languages to your configuration file.[/red]"
-        )
-        return
-
-    console.print(
-        Panel(
-            "[bold]Welcome to Newsolingo![/bold]\n"
-            "Practice your language skills with real-world content.",
-            border_style="cyan",
-        )
-    )
-
-    if len(available_languages) == 1:
-        lang_code = available_languages[0]
+    # Direct URL mode
+    if url is not None:
+        if language is None:
+            console.print("[red]Internal error: URL provided without language[/red]")
+            return
+        lang_code = language
         lang_config = config.get_language(lang_code)
+        subject = subject or "Direct"
+        # Skip welcome panel? Keep it brief.
         console.print(
-            f"Language: [bold]{lang_config.name}[/bold] (Level: {lang_config.level})"
+            Panel(
+                f"[bold]Direct URL Mode[/bold]\nScraping article from {url}",
+                border_style="cyan",
+            )
         )
-    else:
-        lang_labels = []
-        for code in available_languages:
-            lc = config.get_language(code)
-            lang_labels.append(f"{lc.name} (Level: {lc.level})")
-
-        chosen_label = _pick_option("Select language:", lang_labels)
-        lang_code = available_languages[lang_labels.index(chosen_label)]
-        lang_config = config.get_language(lang_code)
-
-    console.print(
-        f"\n[bold]Language:[/bold] {lang_config.name} | [bold]Level:[/bold] {lang_config.level}"
-    )
-
-    # Step 2: Subject selection
-    available_subjects = source_registry.get_subjects(lang_code)
-    configured_subjects = [s for s in lang_config.subjects if s in available_subjects]
-
-    if not configured_subjects:
-        # Fall back to all available subjects
-        configured_subjects = available_subjects
-
-    if not configured_subjects:
         console.print(
-            f"[red]No content sources available for {lang_config.name}.[/red]"
+            f"\n[bold]Language:[/bold] {lang_config.name} | [bold]Level:[/bold] {lang_config.level}"
         )
-        return
-
-    subject_options = ["Random"] + configured_subjects
-    chosen_subject = _pick_option("Select subject:", subject_options)
-    subject = None if chosen_subject == "Random" else chosen_subject
-
-    # Ask about accents/transliteration
-    lang_info = get_language_info(lang_code)
-    if lang_info and lang_info.script == "latin":
-        prompt_text = "Ignore missing accents in your answers? (e.g., á vs a)"
+        # Ask about accents/transliteration
+        lang_info = get_language_info(lang_code)
+        if lang_info and lang_info.script == "latin":
+            prompt_text = "Ignore missing accents in your answers? (e.g., á vs a)"
+        else:
+            prompt_text = "Accept transliteration in your answers? (e.g., Latin letters instead of original script)"
+        ignore_accents = _ask_yes_no(prompt_text, default=True)
+        # Fetch and adapt article from URL
+        console.print("\n[yellow]Fetching and adapting article...[/yellow]")
+        with console.status("[bold yellow]Scraping URL..."):
+            article = prepare_reading_exercise(
+                config=config,
+                llm_client=llm_client,
+                db=db,
+                source_registry=source_registry,
+                language_code=lang_code,
+                subject=subject,
+                direct_url=url,
+            )
     else:
-        prompt_text = "Accept transliteration in your answers? (e.g., Latin letters instead of original script)"
-    ignore_accents = _ask_yes_no(prompt_text, default=True)
-
-    # Step 3: Fetch and adapt article
-    console.print("\n[yellow]Fetching and adapting article...[/yellow]")
-    with console.status("[bold yellow]Crawling for articles..."):
-        article = prepare_reading_exercise(
-            config=config,
-            llm_client=llm_client,
-            db=db,
-            source_registry=source_registry,
-            language_code=lang_code,
-            subject=subject,
+        # Interactive mode (original flow)
+        console.print(
+            Panel(
+                "[bold]Welcome to Newsolingo![/bold]\n"
+                "Practice your language skills with real-world content.",
+                border_style="cyan",
+            )
         )
+        # Step 1: Language selection
+        available_languages = list(config.languages.keys())
+        if not available_languages:
+            console.print(
+                "[red]No languages configured. Add languages to your configuration file.[/red]"
+            )
+            return
+
+        if len(available_languages) == 1:
+            lang_code = available_languages[0]
+            lang_config = config.get_language(lang_code)
+            console.print(
+                f"Language: [bold]{lang_config.name}[/bold] (Level: {lang_config.level})"
+            )
+        else:
+            lang_labels = []
+            for code in available_languages:
+                lc = config.get_language(code)
+                lang_labels.append(f"{lc.name} (Level: {lc.level})")
+
+            chosen_label = _pick_option("Select language:", lang_labels)
+            lang_code = available_languages[lang_labels.index(chosen_label)]
+            lang_config = config.get_language(lang_code)
+
+        console.print(
+            f"\n[bold]Language:[/bold] {lang_config.name} | [bold]Level:[/bold] {lang_config.level}"
+        )
+
+        # Step 2: Subject selection
+        available_subjects = source_registry.get_subjects(lang_code)
+        configured_subjects = [
+            s for s in lang_config.subjects if s in available_subjects
+        ]
+
+        if not configured_subjects:
+            # Fall back to all available subjects
+            configured_subjects = available_subjects
+
+        if not configured_subjects:
+            console.print(
+                f"[red]No content sources available for {lang_config.name}.[/red]"
+            )
+            return
+
+        subject_options = ["Random"] + configured_subjects
+        chosen_subject = _pick_option("Select subject:", subject_options)
+        subject = None if chosen_subject == "Random" else chosen_subject
+
+        # Ask about accents/transliteration
+        lang_info = get_language_info(lang_code)
+        if lang_info and lang_info.script == "latin":
+            prompt_text = "Ignore missing accents in your answers? (e.g., á vs a)"
+        else:
+            prompt_text = "Accept transliteration in your answers? (e.g., Latin letters instead of original script)"
+        ignore_accents = _ask_yes_no(prompt_text, default=True)
+
+        # Step 3: Fetch and adapt article
+        console.print("\n[yellow]Fetching and adapting article...[/yellow]")
+        with console.status("[bold yellow]Crawling for articles..."):
+            article = prepare_reading_exercise(
+                config=config,
+                llm_client=llm_client,
+                db=db,
+                source_registry=source_registry,
+                language_code=lang_code,
+                subject=subject,
+            )
 
     if not article:
         console.print(
@@ -541,8 +584,16 @@ def run_session(
     _display_progress(db, config, lang_code)
 
 
-def run(verbose: bool = False) -> None:
-    """Main entry point - initialize everything and run the session loop."""
+def run(
+    verbose: bool = False,
+    url: str | None = None,
+    language: str | None = None,
+    subject: str | None = None,
+) -> None:
+    """Main entry point - initialize everything and run the session loop.
+
+    If url and language are provided, runs a single session with that URL.
+    """
     _setup_logging(verbose)
 
     # Load configuration
@@ -551,6 +602,22 @@ def run(verbose: bool = False) -> None:
     except Exception as e:
         console.print(f"[red]Failed to load configuration: {e}[/red]")
         sys.exit(1)
+
+    # Validate URL/language parameters
+    if url is not None:
+        if language is None:
+            console.print("[red]Error: --url requires --language to be specified[/red]")
+            sys.exit(1)
+        if language not in config.languages:
+            console.print(
+                f"[red]Error: Language '{language}' not found in configuration[/red]"
+            )
+            sys.exit(1)
+        subject = subject or "Direct"
+    else:
+        # If URL not provided, language must be selected interactively
+        language = None
+        subject = None
 
     console.print(f"[dim]Hello, {config.user.name}! Loading Newsolingo...[/dim]")
 
@@ -605,14 +672,26 @@ def run(verbose: bool = False) -> None:
     source_registry = load_sources()
 
     # Run session loop
+    single_session = url is not None
     while True:
         try:
-            run_session(config, llm_client, db, source_registry)
+            run_session(
+                config,
+                llm_client,
+                db,
+                source_registry,
+                url=url,
+                language=language,
+                subject=subject,
+            )
         except KeyboardInterrupt:
             console.print("\n[dim]Session interrupted.[/dim]")
         except Exception as e:
             logger.exception("Session error")
             console.print(f"\n[red]Error during session: {e}[/red]")
+
+        if single_session:
+            break
 
         console.print()
         try:

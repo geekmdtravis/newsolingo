@@ -54,6 +54,22 @@ def main() -> None:
         action="store_true",
         help="Delete the database and all its files, then exit",
     )
+    run_parser.add_argument(
+        "--url",
+        type=str,
+        help="Direct URL to scrape for article (requires --language)",
+    )
+    run_parser.add_argument(
+        "--language",
+        type=str,
+        help="Language code (e.g., pt_br) when using --url",
+    )
+    run_parser.add_argument(
+        "--subject",
+        type=str,
+        default="Direct",
+        help="Subject for direct URL articles (default: 'Direct')",
+    )
 
     # Config command
     config_parser = subparsers.add_parser(
@@ -98,6 +114,10 @@ def main() -> None:
     )
 
     args = parser.parse_args()
+
+    # Validate URL/language combination
+    if hasattr(args, "url") and args.url and not args.language:
+        parser.error("--url requires --language to be specified")
 
     # Check for invalid combination of --reset-db with subcommands
     if args.reset_db and args.command and args.command != "run":
@@ -172,7 +192,12 @@ def main() -> None:
                 sys.exit(0)
 
         try:
-            run(verbose=args.verbose)
+            run(
+                verbose=args.verbose,
+                url=args.url,
+                language=args.language,
+                subject=args.subject,
+            )
             sys.exit(0)
         except KeyboardInterrupt:
             print("\nGoodbye!")

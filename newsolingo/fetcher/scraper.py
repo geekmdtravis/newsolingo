@@ -300,3 +300,18 @@ def fetch_random_article(source: Source) -> tuple[str, str] | None:
 
     logger.warning("Could not extract any article from %s", source.name)
     return None
+
+
+def fetch_article_from_url(url: str) -> tuple[str, str] | None:
+    """Fetch and extract article text directly from a URL.
+
+    Args:
+        url: The article URL to fetch.
+
+    Returns:
+        Tuple of (article_url, article_text) or None if extraction failed.
+    """
+    text = extract_article_text(url)
+    if text:
+        return url, text
+    return None
