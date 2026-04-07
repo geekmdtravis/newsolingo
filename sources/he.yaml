@@ -4,55 +4,14 @@ subjects:
       name: "Balashon"
       type: "blog"
       description: "Hebrew language detective - etymology and biblical Hebrew"
-    - url: "https://hebrew-academy.org.il"
-      name: "Academy of Hebrew Language"
-      type: "academic"
-      description: "Official Hebrew language academy articles"
     - url: "https://www.safa-ivrit.org"
       name: "Safa Ivrit"
       type: "educational"
       description: "Hebrew language preservation and education"
 
-  geopolitics:
-    - url: "https://www.ynet.co.il"
-      name: "Ynet"
-      type: "news"
-      description: "Major Israeli news portal"
-    - url: "https://www.haaretz.co.il"
-      name: "Haaretz"
-      type: "news"
-      description: "Israeli newspaper with quality journalism"
-    - url: "https://www.mako.co.il"
-      name: "Mako"
-      type: "news"
-      description: "Israeli news and entertainment portal"
-    - url: "https://www.kan.org.il"
-      name: "Kan"
-      type: "news"
-      description: "Israeli public broadcasting news"
-
-  programming:
-    - url: "https://www.geektime.co.il"
-      name: "Geektime"
-      type: "tech_news"
-      description: "Israeli tech news and startup coverage"
-    - url: "https://internet-israel.com"
-      name: "Internet Israel"
-      type: "tech_news"
-      description: "Israeli tech and internet news"
-
-  linux:
-    - url: "https://linuxil.org"
-      name: "Linux Israel"
-      type: "community"
-      description: "Israeli Linux user community"
-    - url: "https://whatsup.co.il/tech"
-      name: "Whatsup Tech"
-      type: "tech_news"
-      description: "Israeli tech news including Linux"
-
-  exercise_science:
-    - url: "https://www.sport5.co.il"
-      name: "Sport5"
-      type: "sports"
-      description: "Israeli sports news and fitness content"
+  # Note: Most Israeli sites use Cloudflare/anti-bot protection (521/403 errors).
+  # For geopolitics, exercise_science, programming: use Portuguese sources instead.
+  geopolitics: []
+  programming: []
+  linux: []
+  exercise_science: []

@@ -3,6 +3,8 @@
 All prompts are centralized here for easy editing and tuning.
 """
 
+from newsolingo.languages.registry import get_language_info
+
 # CEFR level descriptions to help the LLM understand what each level means
 CEFR_DESCRIPTIONS = {
     "pre-A1": (
@@ -82,9 +84,19 @@ def adapt_article_user_prompt(original_text: str, max_length: int = 2000) -> str
 {original_text}"""
 
 
-def assess_translation_system_prompt(language_code: str, level: str) -> str:
+def assess_translation_system_prompt(
+    language_code: str, level: str, ignore_accents: bool = True
+) -> str:
     """System prompt for assessing a translation."""
     lang_name = LANGUAGE_NAMES.get(language_code, language_code)
+    lang_info = get_language_info(language_code)
+
+    accent_instruction = ""
+    if ignore_accents and lang_info:
+        if lang_info.script == "latin":
+            accent_instruction = "\n\n**Important**: The student may omit accents (e.g., write 'a' instead of 'á'). This is acceptable - do not penalize for missing accents."
+        elif lang_info.script == "hebrew":
+            accent_instruction = "\n\n**Important**: The student may use transliteration (Latin letters) instead of Hebrew script. This is acceptable - do not penalize for using transliteration."
 
     return f"""You are an expert language teacher assessing a student's translation from {lang_name} to English.
 
@@ -93,7 +105,7 @@ The student is at CEFR level {level} in {lang_name}. Assess their translation co
 Evaluate these dimensions:
 1. **Accuracy**: Did they correctly translate the meaning?
 2. **Nuance**: Did they capture subtleties, tone, and implied meanings?
-3. **Completeness**: Did they translate all the important content?
+3. **Completeness**: Did they translate all the important content?{accent_instruction}
 
 Be encouraging but honest. Note specific mistakes and explain what the correct interpretation would be.
 Adjust your expectations to the student's level - a B1 student won't catch every nuance, and that's okay.
@@ -158,9 +170,19 @@ TEXT:
 Generate exactly {num_questions} questions. Remember to write them in the target language at the appropriate level."""
 
 
-def assess_answer_system_prompt(language_code: str, level: str) -> str:
+def assess_answer_system_prompt(
+    language_code: str, level: str, ignore_accents: bool = True
+) -> str:
     """System prompt for assessing a student's answer to a comprehension question."""
     lang_name = LANGUAGE_NAMES.get(language_code, language_code)
+    lang_info = get_language_info(language_code)
+
+    accent_instruction = ""
+    if ignore_accents and lang_info:
+        if lang_info.script == "latin":
+            accent_instruction = "\n\n**Important**: The student may omit accents (e.g., write 'a' instead of 'á'). This is acceptable - do not penalize for missing accents."
+        elif lang_info.script == "hebrew":
+            accent_instruction = "\n\n**Important**: The student may use transliteration (Latin letters) instead of Hebrew script. This is acceptable - do not penalize for using transliteration."
 
     return f"""You are a {lang_name} language teacher assessing a student's answer to a comprehension question.
 The student is at CEFR level {level}.
@@ -168,7 +190,7 @@ The student is at CEFR level {level}.
 Evaluate:
 1. **Correctness**: Is the answer factually correct based on the text?
 2. **Grammar**: Is the {lang_name} grammar appropriate for their level?
-3. **Vocabulary**: Are they using appropriate vocabulary?
+3. **Vocabulary**: Are they using appropriate vocabulary?{accent_instruction}
 
 Be encouraging but honest. Provide specific corrections where needed.
 Grade on a scale of 0-100, considering their level.

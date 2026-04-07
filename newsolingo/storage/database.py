@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS sessions (
     questions_score REAL,
     overall_score REAL,
     feedback_json TEXT,
+    ignore_accents INTEGER DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (language_code) REFERENCES languages(code),
     FOREIGN KEY (article_id) REFERENCES articles(id)
@@ -82,6 +83,18 @@ class Database:
         """Create tables if they don't exist."""
         self.conn.executescript(SCHEMA_SQL)
         self.conn.commit()
+        # Migration: add ignore_accents column to sessions if it doesn't exist
+        try:
+            cursor = self.conn.execute("PRAGMA table_info(sessions)")
+            columns = [row[1] for row in cursor.fetchall()]
+            if "ignore_accents" not in columns:
+                logger.info("Adding ignore_accents column to sessions table")
+                self.conn.execute(
+                    "ALTER TABLE sessions ADD COLUMN ignore_accents INTEGER DEFAULT 1"
+                )
+                self.conn.commit()
+        except Exception as e:
+            logger.warning("Could not check/add ignore_accents column: %s", e)
         logger.info("Database initialized at %s", self.db_path)
 
     def close(self) -> None:
@@ -192,12 +205,13 @@ class Database:
         language_code: str,
         article_id: int,
         level: str,
+        ignore_accents: bool = True,
     ) -> int:
         """Create a new practice session and return its ID."""
         cursor = self.conn.execute(
-            """INSERT INTO sessions (language_code, article_id, level)
-               VALUES (?, ?, ?)""",
-            (language_code, article_id, level),
+            """INSERT INTO sessions (language_code, article_id, level, ignore_accents)
+               VALUES (?, ?, ?, ?)""",
+            (language_code, article_id, level, 1 if ignore_accents else 0),
         )
         self.conn.commit()
         return cursor.lastrowid  # type: ignore[return-value]

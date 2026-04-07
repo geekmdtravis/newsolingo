@@ -69,6 +69,7 @@ class SessionResult:
     article: AdaptedArticle
     user_translation: str
     translation_assessment: TranslationAssessment
+    ignore_accents: bool = True
     questions: list[QuestionItem] = field(default_factory=list)
     user_answers: list[str] = field(default_factory=list)
     answer_assessments: list[AnswerAssessment] = field(default_factory=list)

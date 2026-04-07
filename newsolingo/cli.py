@@ -73,6 +73,24 @@ def _pick_option(prompt_text: str, options: list[str]) -> str:
             )
 
 
+def _ask_yes_no(prompt_text: str, default: bool = True) -> bool:
+    """Ask a yes/no question with a default value."""
+    default_text = "Y/n" if default else "y/N"
+    while True:
+        try:
+            response = pt_prompt(HTML(f"<b>{prompt_text} ({default_text}): </b>"))
+            response = response.strip().lower()
+            if not response:
+                return default
+            if response in ("y", "yes"):
+                return True
+            if response in ("n", "no"):
+                return False
+            console.print("[red]Please enter 'y' or 'n'[/red]")
+        except (EOFError, KeyboardInterrupt):
+            return default
+
+
 def _multiline_input(prompt_text: str) -> str:
     """Get multiline input from the user. Empty line to finish."""
     console.print(f"\n[bold]{prompt_text}[/bold]")
@@ -330,6 +348,14 @@ def run_session(
     chosen_subject = _pick_option("Select subject:", subject_options)
     subject = None if chosen_subject == "Random" else chosen_subject
 
+    # Ask about accents/transliteration
+    lang_info = get_language_info(lang_code)
+    if lang_info and lang_info.script == "latin":
+        prompt_text = "Ignore missing accents in your answers? (e.g., á vs a)"
+    else:
+        prompt_text = "Accept transliteration in your answers? (e.g., Latin letters instead of original script)"
+    ignore_accents = _ask_yes_no(prompt_text, default=True)
+
     # Step 3: Fetch and adapt article
     console.print("\n[yellow]Fetching and adapting article...[/yellow]")
     with console.status("[bold yellow]Crawling for articles..."):
@@ -353,6 +379,7 @@ def run_session(
         language_code=lang_code,
         article_id=article.article_id or 0,
         level=lang_config.level,
+        ignore_accents=ignore_accents,
     )
 
     # Step 4: Display reading exercise
@@ -379,6 +406,7 @@ def run_session(
                 user_translation=user_translation,
                 language_code=lang_code,
                 level=lang_config.level,
+                ignore_accents=ignore_accents,
             )
         _display_translation_result(translation_assessment)
 
@@ -436,6 +464,7 @@ def run_session(
                 expected_hint=q.expected_answer_hint,
                 language_code=lang_code,
                 level=lang_config.level,
+                ignore_accents=ignore_accents,
             )
         answer_assessments.append(assessment)
 
@@ -477,6 +506,7 @@ def run_session(
         session_id=session_id,
         language_code=lang_code,
         level=lang_config.level,
+        ignore_accents=ignore_accents,
         article=article,
         user_translation=user_translation or "",
         translation_assessment=translation_assessment,
