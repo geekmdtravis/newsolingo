@@ -1,0 +1,59 @@
+subjects:
+  linux:
+    - url: "https://diolinux.com.br"
+      name: "Diolinux"
+      type: "blog"
+      description: "Linux and open source blog in Brazilian Portuguese"
+    - url: "https://vivaolinux.com.br"
+      name: "Viva o Linux"
+      type: "community"
+      description: "Largest GNU/Linux community in Latin America"
+    - url: "https://www.linuxdescomplicado.com.br"
+      name: "Linux Descomplicado"
+      type: "blog"
+      description: "Linux tutorials and tips in Portuguese"
+
+  programming:
+    - url: "https://www.tabnews.com.br"
+      name: "TabNews"
+      type: "tech_news"
+      description: "Brazilian tech news and discussion platform"
+    - url: "https://www.alura.com.br/artigos"
+      name: "Alura Blog"
+      type: "blog"
+      description: "Tech education articles in Portuguese"
+    - url: "https://dev.to/t/portuguese"
+      name: "DEV.to Portuguese"
+      type: "blog"
+      description: "Developer community posts in Portuguese"
+
+  geopolitics:
+    - url: "https://www.bbc.com/portuguese"
+      name: "BBC Brasil"
+      type: "news"
+      description: "BBC's Brazilian Portuguese news service"
+    - url: "https://g1.globo.com/mundo"
+      name: "G1 Mundo"
+      type: "news"
+      description: "Globo's international news section"
+    - url: "https://www.cartacapital.com.br/mundo"
+      name: "Carta Capital Mundo"
+      type: "news"
+      description: "Political and international affairs magazine"
+
+  exercise_science:
+    - url: "https://www.uol.com.br/vivabem"
+      name: "VivaBem"
+      type: "health"
+      description: "Health, fitness, and wellness articles in Portuguese"
+    - url: "https://ge.globo.com/eu-atleta"
+      name: "Eu Atleta"
+      type: "health"
+      description: "Sports and exercise science content"
+
+  biblical_hebrew:
+    # Cross-language sources about biblical topics in Portuguese
+    - url: "https://www.estudosdabiblia.net"
+      name: "Estudos da Biblia"
+      type: "blog"
+      description: "Biblical study articles in Portuguese"

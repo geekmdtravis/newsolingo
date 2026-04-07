@@ -1,0 +1,50 @@
+user:
+  name: "Travis"
+
+languages:
+  pt_br:
+    name: "Brazilian Portuguese"
+    level: "A1"
+    subjects:
+      - linux
+      - programming
+      - geopolitics
+      - exercise_science
+  he:
+    name: "Hebrew"
+    level: "pre-A1"
+    subjects:
+      - biblical_hebrew
+      - geopolitics
+      - programming
+
+llm:
+  # Which provider to use: "llamacpp", "openrouter", or "deepseek"
+  provider: "deepseek"
+
+  llamacpp:
+    base_url: "http://127.0.0.1:8089/v1"
+    # Model name reported by your llama.cpp server (often ignored but required by API)
+    model: "local-model"
+
+  openrouter:
+    # Set OPENROUTER_API_KEY environment variable or put key here
+    api_key: "${OPENROUTER_API_KEY}"
+    model: "minimax/minimax-m2.5:free"
+
+  deepseek:
+    # Set DEEPSEEK_API_KEY environment variable or put key here
+    api_key: "${DEEPSEEK_API_KEY}"
+    model: "deepseek-chat"
+
+advancement:
+  # Suggest level advancement when rolling average exceeds this score (0-100)
+  threshold_score: 80
+  # Minimum number of completed sessions before suggesting advancement
+  min_sessions: 10
+
+exercise:
+  # Number of comprehension questions per session
+  num_questions: 4
+  # Maximum length of adapted text in characters (to keep exercises manageable)
+  max_adapted_length: 2000
