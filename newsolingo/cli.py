@@ -279,7 +279,7 @@ def _display_progress(db: Database, config: AppConfig, language_code: str) -> No
                 f"over your last {config.advancement.min_sessions} sessions.\n\n"
                 f"Consider advancing from [bold]{report.current_level}[/bold] "
                 f"to [bold green]{report.suggested_next_level}[/bold green]!\n\n"
-                f"Update your level in config.yaml when you're ready.",
+                f"Update your level in your configuration file when you're ready.",
                 title="Level Advancement Suggestion",
                 border_style="green",
                 padding=(1, 2),
@@ -298,7 +298,7 @@ def run_session(
     available_languages = list(config.languages.keys())
     if not available_languages:
         console.print(
-            "[red]No languages configured. Add languages to config.yaml.[/red]"
+            "[red]No languages configured. Add languages to your configuration file.[/red]"
         )
         return
 
@@ -572,7 +572,9 @@ def run() -> None:
             console.print(
                 f"  llama-server -m <model.gguf> --port {url.split(':')[-1]}\n"
             )
-            console.print("[yellow]Or switch to OpenRouter in config.yaml:[/yellow]")
+            console.print(
+                "[yellow]Or switch to OpenRouter in your configuration file:[/yellow]"
+            )
             console.print("  llm:")
             console.print('    provider: "openrouter"')
         elif provider == "openrouter":

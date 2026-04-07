@@ -35,3 +35,6 @@ Thumbs.db
 # DB
 *.db-shm
 *.db-wal
+
+# User configuration (now in XDG directory ~/.config/newsolingo/config.yaml)
+config.yaml

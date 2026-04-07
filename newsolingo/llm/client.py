@@ -41,7 +41,7 @@ class LLMClient:
             if not cfg.api_key or cfg.api_key.startswith("${"):
                 raise ValueError(
                     "OpenRouter API key not set. Set OPENROUTER_API_KEY environment "
-                    "variable or add it to config.yaml"
+                    "variable or add it to your configuration file"
                 )
             return OpenAI(
                 base_url="https://openrouter.ai/api/v1",
@@ -52,7 +52,7 @@ class LLMClient:
             if not cfg.api_key or cfg.api_key.startswith("${"):
                 raise ValueError(
                     "DeepSeek API key not set. Set DEEPSEEK_API_KEY environment "
-                    "variable or add it to config.yaml"
+                    "variable or add it to your configuration file"
                 )
             return OpenAI(
                 base_url="https://api.deepseek.com",

@@ -1,10 +1,13 @@
+# Configuration file example for Newsolingo.
+# Place your actual configuration in ~/.config/newsolingo/config.yaml.
+#
 user:
   name: "Travis"
 
 languages:
   pt_br:
     name: "Brazilian Portuguese"
-    level: "A1"
+    level: "A2"
     subjects:
       - linux
       - programming

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import re
+import shutil
 from pathlib import Path
 from typing import Any
 
@@ -29,6 +30,101 @@ def _expand_env_vars(value: Any) -> Any:
     elif isinstance(value, list):
         return [_expand_env_vars(item) for item in value]
     return value
+
+
+def get_xdg_config_dir() -> Path:
+    """Return the XDG config directory for newsolingo.
+
+    Follows XDG Base Directory Specification:
+    - $XDG_CONFIG_HOME (default: ~/.config)
+    - Creates newsolingo subdirectory
+    """
+    config_home = os.environ.get("XDG_CONFIG_HOME")
+    if not config_home:
+        config_home = Path.home() / ".config"
+    else:
+        config_home = Path(config_home)
+
+    app_dir = config_home / "newsolingo"
+    app_dir.mkdir(parents=True, exist_ok=True)
+    return app_dir
+
+
+def get_xdg_config_path() -> Path:
+    """Return the path to the user's config.yaml in XDG config directory."""
+    return get_xdg_config_dir() / "config.yaml"
+
+
+def get_default_config_template() -> str:
+    """Generate a default config template with comments and placeholders."""
+    return """# Newsolingo Configuration
+# This file should be placed in ~/.config/newsolingo/config.yaml
+
+user:
+  # Name displayed in the CLI. Uses $USER environment variable if not set.
+  name: "${USER}"
+
+# Add languages you want to practice. Each language needs:
+# - code: short identifier (e.g., 'pt_br', 'es', 'fr')
+# - name: display name
+# - level: CEFR level (pre-A1, A1, A2, B1, B2, C1, C2)
+# - subjects: list of topics you're interested in
+# Example:
+# pt_br:
+#   name: "Brazilian Portuguese"
+#   level: "A2"
+#   subjects:
+#     - linux
+#     - programming
+#     - geopolitics
+languages: {}
+
+llm:
+  # Which provider to use: "llamacpp", "openrouter", or "deepseek"
+  provider: "deepseek"
+
+  llamacpp:
+    base_url: "http://127.0.0.1:8089/v1"
+    # Model name reported by your llama.cpp server (often ignored but required by API)
+    model: "local-model"
+
+  openrouter:
+    # Set OPENROUTER_API_KEY environment variable or put key here
+    api_key: "${OPENROUTER_API_KEY}"
+    model: "minimax/minimax-m2.5:free"
+
+  deepseek:
+    # Set DEEPSEEK_API_KEY environment variable or put key here
+    api_key: "${DEEPSEEK_API_KEY}"
+    model: "deepseek-chat"
+
+advancement:
+  # Suggest level advancement when rolling average exceeds this score (0-100)
+  threshold_score: 80
+  # Minimum number of completed sessions before suggesting advancement
+  min_sessions: 10
+
+exercise:
+  # Number of comprehension questions per session
+  num_questions: 4
+  # Maximum length of adapted text in characters (to keep exercises manageable)
+  max_adapted_length: 2000
+"""
+
+
+def ensure_config_exists() -> Path:
+    """Ensure a config file exists in XDG location.
+
+    If no config exists, creates one from template.
+    Returns path to the config file.
+    """
+    config_path = get_xdg_config_path()
+    if not config_path.exists():
+        config_dir = config_path.parent
+        config_dir.mkdir(parents=True, exist_ok=True)
+        template = get_default_config_template()
+        config_path.write_text(template, encoding="utf-8")
+    return config_path
 
 
 class LanguageConfig(BaseModel):
@@ -104,6 +200,14 @@ class UserConfig(BaseModel):
 
     name: str = "Learner"
 
+    @field_validator("name", mode="before")
+    @classmethod
+    def set_default_name(cls, v: str | None) -> str:
+        """Set default name from environment variable if not specified."""
+        if v is None or v == "Learner":
+            return os.environ.get("USER", "Learner")
+        return v
+
 
 class AppConfig(BaseModel):
     """Top-level application configuration."""
@@ -137,16 +241,23 @@ def load_config(config_path: Path | None = None) -> AppConfig:
 
     Searches in this order:
     1. Explicit path if provided
-    2. ./config.yaml (current directory)
-    3. ~/.config/newsolingo/config.yaml
+    2. XDG config directory (~/.config/newsolingo/config.yaml)
+    3. ./config.yaml (current directory) - legacy location
+
+    If no config file exists, creates a template in XDG location.
     """
     search_paths = []
     if config_path:
         search_paths.append(Path(config_path))
+    else:
+        # Ensure XDG config exists (creates template if missing)
+        xdg_config = ensure_config_exists()
+        search_paths.append(xdg_config)
+
+    # Add legacy paths for backward compatibility
     search_paths.extend(
         [
             Path("config.yaml"),
-            Path.home() / ".config" / "newsolingo" / "config.yaml",
         ]
     )
 
@@ -157,7 +268,14 @@ def load_config(config_path: Path | None = None) -> AppConfig:
             if raw is None:
                 raw = {}
             expanded = _expand_env_vars(raw)
-            return AppConfig(**expanded)
+            config = AppConfig(**expanded)
+            # Set default username from environment if not specified
+            if config.user.name == "Learner":
+                config.user.name = os.environ.get("USER", "Learner")
+            return config
 
-    # No config file found - use defaults
-    return AppConfig()
+    # Should not reach here because ensure_config_exists creates a config
+    # But fallback to defaults for safety
+    config = AppConfig()
+    config.user.name = os.environ.get("USER", "Learner")
+    return config
