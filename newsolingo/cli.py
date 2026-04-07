@@ -36,7 +36,7 @@ console = Console()
 
 def _setup_logging(verbose: bool = False) -> None:
     """Configure logging."""
-    level = logging.DEBUG if verbose else logging.INFO
+    level = logging.DEBUG if verbose else logging.WARNING
     logging.basicConfig(
         level=level,
         format="%(levelname)s: %(message)s",
@@ -46,6 +46,7 @@ def _setup_logging(verbose: bool = False) -> None:
     logging.getLogger("httpcore").setLevel(logging.WARNING)
     logging.getLogger("trafilatura").setLevel(logging.WARNING)
     logging.getLogger("openai").setLevel(logging.WARNING)
+    logger.debug("Logging configured with level %s", logging.getLevelName(level))
 
 
 def _pick_option(prompt_text: str, options: list[str]) -> str:
@@ -540,9 +541,9 @@ def run_session(
     _display_progress(db, config, lang_code)
 
 
-def run() -> None:
+def run(verbose: bool = False) -> None:
     """Main entry point - initialize everything and run the session loop."""
-    _setup_logging()
+    _setup_logging(verbose)
 
     # Load configuration
     try:
