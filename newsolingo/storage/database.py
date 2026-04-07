@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import json
 import logging
+import os
+import shutil
 import sqlite3
 from datetime import datetime
 from pathlib import Path
@@ -11,8 +13,27 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
+
+def get_xdg_data_dir() -> Path:
+    """Return the XDG data directory for newsolingo.
+
+    Follows XDG Base Directory Specification:
+    - $XDG_DATA_HOME (default: ~/.local/share)
+    - Creates newsolingo subdirectory
+    """
+    data_home = os.environ.get("XDG_DATA_HOME")
+    if not data_home:
+        data_home = Path.home() / ".local" / "share"
+    else:
+        data_home = Path(data_home)
+
+    app_dir = data_home / "newsolingo"
+    app_dir.mkdir(parents=True, exist_ok=True)
+    return app_dir
+
+
 # Default database location
-DEFAULT_DB_PATH = Path("newsolingo.db")
+DEFAULT_DB_PATH = get_xdg_data_dir() / "newsolingo.db"
 
 SCHEMA_SQL = """
 CREATE TABLE IF NOT EXISTS languages (
@@ -67,6 +88,8 @@ class Database:
 
     def __init__(self, db_path: Path | None = None) -> None:
         self.db_path = db_path or DEFAULT_DB_PATH
+        # Ensure parent directory exists
+        self.db_path.parent.mkdir(parents=True, exist_ok=True)
         self._conn: sqlite3.Connection | None = None
 
     @property
@@ -102,6 +125,48 @@ class Database:
         if self._conn:
             self._conn.close()
             self._conn = None
+
+    def reset(self) -> list[str]:
+        """Close connection and delete all database files.
+
+        Returns list of deleted file paths.
+        """
+        self.close()
+        return self.delete_database_files(self.db_path)
+
+    @staticmethod
+    def delete_database_files(db_path: Path) -> list[str]:
+        """Delete database file and all auxiliary files.
+
+        Deletes:
+        - The main .db file
+        - -shm and -wal files (SQLite WAL mode)
+        - .bak, .corrupted, and any other backups with same base name
+        """
+        deleted = []
+        parent = db_path.parent
+        base_name = db_path.name
+
+        # Pattern to match all related files
+        patterns = [
+            base_name,
+            base_name + "-shm",
+            base_name + "-wal",
+            base_name + ".bak",
+            base_name + ".corrupted",
+            base_name + ".*",  # catch any other extensions
+        ]
+
+        for pattern in patterns:
+            for file_path in parent.glob(pattern):
+                try:
+                    file_path.unlink()
+                    deleted.append(str(file_path))
+                except OSError as e:
+                    logger.warning("Could not delete %s: %s", file_path, e)
+
+        logger.info("Deleted %d database files: %s", len(deleted), deleted)
+        return deleted
 
     # --- Language operations ---
 
