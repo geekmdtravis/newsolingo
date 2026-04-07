@@ -296,8 +296,14 @@ def run_session(
     url: str | None = None,
     language: str | None = None,
     subject: str | None = None,
+    ignore_accents: bool | None = None,
 ) -> None:
-    """Run a single interactive practice session."""
+    """Run a single interactive practice session.
+
+    If ignore_accents is None (default), user will be asked interactively.
+    If ignore_accents is True, missing accents/transliteration are accepted.
+    If ignore_accents is False, strict mode requires accents/transliteration.
+    """
     # Direct URL mode
     if url is not None:
         if language is None:
@@ -316,13 +322,15 @@ def run_session(
         console.print(
             f"\n[bold]Language:[/bold] {lang_config.name} | [bold]Level:[/bold] {lang_config.level}"
         )
-        # Ask about accents/transliteration
-        lang_info = get_language_info(lang_code)
-        if lang_info and lang_info.script == "latin":
-            prompt_text = "Ignore missing accents in your answers? (e.g., á vs a)"
-        else:
-            prompt_text = "Accept transliteration in your answers? (e.g., Latin letters instead of original script)"
-        ignore_accents = _ask_yes_no(prompt_text, default=True)
+        # Determine accent/transliteration handling
+        if ignore_accents is None:
+            lang_info = get_language_info(lang_code)
+            if lang_info and lang_info.script == "latin":
+                prompt_text = "Ignore missing accents in your answers? (e.g., á vs a)"
+            else:
+                prompt_text = "Accept transliteration in your answers? (e.g., Latin letters instead of original script)"
+            ignore_accents = _ask_yes_no(prompt_text, default=True)
+        # else: use the provided ignore_accents value
         # Fetch and adapt article from URL
         console.print("\n[yellow]Fetching and adapting article...[/yellow]")
         with console.status("[bold yellow]Scraping URL..."):
@@ -392,13 +400,15 @@ def run_session(
         chosen_subject = _pick_option("Select subject:", subject_options)
         subject = None if chosen_subject == "Random" else chosen_subject
 
-        # Ask about accents/transliteration
-        lang_info = get_language_info(lang_code)
-        if lang_info and lang_info.script == "latin":
-            prompt_text = "Ignore missing accents in your answers? (e.g., á vs a)"
-        else:
-            prompt_text = "Accept transliteration in your answers? (e.g., Latin letters instead of original script)"
-        ignore_accents = _ask_yes_no(prompt_text, default=True)
+        # Determine accent/transliteration handling
+        if ignore_accents is None:
+            lang_info = get_language_info(lang_code)
+            if lang_info and lang_info.script == "latin":
+                prompt_text = "Ignore missing accents in your answers? (e.g., á vs a)"
+            else:
+                prompt_text = "Accept transliteration in your answers? (e.g., Latin letters instead of original script)"
+            ignore_accents = _ask_yes_no(prompt_text, default=True)
+        # else: use the provided ignore_accents value
 
         # Step 3: Fetch and adapt article
         console.print("\n[yellow]Fetching and adapting article...[/yellow]")
@@ -589,10 +599,14 @@ def run(
     url: str | None = None,
     language: str | None = None,
     subject: str | None = None,
+    ignore_accents: bool | None = None,
 ) -> None:
     """Main entry point - initialize everything and run the session loop.
 
     If url and language are provided, runs a single session with that URL.
+    If ignore_accents is None (default), user will be asked interactively.
+    If ignore_accents is True, missing accents/transliteration are accepted.
+    If ignore_accents is False, strict mode requires accents/transliteration.
     """
     _setup_logging(verbose)
 
@@ -683,6 +697,7 @@ def run(
                 url=url,
                 language=language,
                 subject=subject,
+                ignore_accents=ignore_accents,
             )
         except KeyboardInterrupt:
             console.print("\n[dim]Session interrupted.[/dim]")

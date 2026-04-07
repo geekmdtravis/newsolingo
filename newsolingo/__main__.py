@@ -2,16 +2,15 @@
 
 import argparse
 import sys
-from pathlib import Path
 
 from newsolingo.storage.database import DEFAULT_DB_PATH, Database
 
 
 def confirm_reset() -> bool:
     """Ask for confirmation before deleting database."""
-    print(f"\nWARNING: This will delete all database files at:")
+    print("\nWARNING: This will delete all database files at:")
     print(f"  {DEFAULT_DB_PATH}")
-    print(f"  (and associated -shm, -wal, .bak, .corrupted files)")
+    print("  (and associated -shm, -wal, .bak, .corrupted files)")
     print()
     try:
         response = (
@@ -69,6 +68,11 @@ def main() -> None:
         type=str,
         default="Direct",
         help="Subject for direct URL articles (default: 'Direct')",
+    )
+    run_parser.add_argument(
+        "--permissive",
+        action="store_true",
+        help="Require accents/transliteration if False. If not specified, you'll be asked interactively.",
     )
 
     # Config command
@@ -144,10 +148,10 @@ def main() -> None:
     if args.command == "config":
         try:
             from newsolingo.config_cli import (
-                config_show,
-                config_set,
                 config_add_language,
                 config_edit,
+                config_set,
+                config_show,
             )
         except ImportError as e:
             print(f"Failed to import config module: {e}")
@@ -197,6 +201,7 @@ def main() -> None:
                 url=args.url,
                 language=args.language,
                 subject=args.subject,
+                ignore_accents=args.permissive,
             )
             sys.exit(0)
         except KeyboardInterrupt:
