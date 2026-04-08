@@ -360,7 +360,14 @@ def run_session(
             )
             return
 
-        if len(available_languages) == 1:
+        # Use provided language if specified, otherwise interactive selection
+        if language is not None:
+            lang_code = language
+            lang_config = config.get_language(lang_code)
+            console.print(
+                f"Language: [bold]{lang_config.name}[/bold] (Level: {lang_config.level})"
+            )
+        elif len(available_languages) == 1:
             lang_code = available_languages[0]
             lang_config = config.get_language(lang_code)
             console.print(
@@ -396,9 +403,22 @@ def run_session(
             )
             return
 
-        subject_options = ["Random"] + configured_subjects
-        chosen_subject = _pick_option("Select subject:", subject_options)
-        subject = None if chosen_subject == "Random" else chosen_subject
+        # Use provided subject if specified, otherwise interactive selection
+        if subject is not None:
+            # Validate subject is available for this language
+            if subject not in configured_subjects:
+                console.print(
+                    f"[red]Error: Subject '{subject}' not available for {lang_config.name}[/red]"
+                )
+                console.print(
+                    f"[dim]Available subjects: {', '.join(configured_subjects)}[/dim]"
+                )
+                return
+            console.print(f"Subject: [bold]{subject}[/bold]")
+        else:
+            subject_options = ["Random"] + configured_subjects
+            chosen_subject = _pick_option("Select subject:", subject_options)
+            subject = None if chosen_subject == "Random" else chosen_subject
 
         # Determine accent/transliteration handling
         if ignore_accents is None:
@@ -629,9 +649,20 @@ def run(
             sys.exit(1)
         subject = subject or "Direct"
     else:
-        # If URL not provided, language must be selected interactively
-        language = None
-        subject = None
+        # If URL not provided, language/subject may be provided via flags
+        # Validate language if provided
+        if language is not None:
+            if language not in config.languages:
+                console.print(
+                    f"[red]Error: Language '{language}' not found in configuration[/red]"
+                )
+                console.print(
+                    f"[dim]Available languages: {', '.join(config.languages.keys())}[/dim]"
+                )
+                sys.exit(1)
+        # If subject is "Random", treat as no preference (None)
+        if subject == "Random":
+            subject = None
 
     console.print(f"[dim]Hello, {config.user.name}! Loading Newsolingo...[/dim]")
 

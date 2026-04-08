@@ -61,18 +61,18 @@ def main() -> None:
     run_parser.add_argument(
         "--language",
         type=str,
-        help="Language code (e.g., pt_br) when using --url",
+        help="Language code (e.g., pt_br) to skip interactive selection; required when using --url",
     )
     run_parser.add_argument(
         "--subject",
         type=str,
         default="Direct",
-        help="Subject for direct URL articles (default: 'Direct')",
+        help="Subject to skip interactive selection; for direct URL articles, default is 'Direct'",
     )
     run_parser.add_argument(
         "--permissive",
         action="store_true",
-        help="Require accents/transliteration if False. If not specified, you'll be asked interactively.",
+        help="Accept missing accents/transliteration; if not specified, you'll be asked interactively.",
     )
 
     # Config command
