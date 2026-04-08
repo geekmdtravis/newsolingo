@@ -120,7 +120,11 @@ def main() -> None:
     args = parser.parse_args()
 
     # Validate URL/language combination
-    if hasattr(args, "url") and args.url and not args.language:
+    if (
+        hasattr(args, "url")
+        and getattr(args, "url", None)
+        and not getattr(args, "language", None)
+    ):
         parser.error("--url requires --language to be specified")
 
     # Check for invalid combination of --reset-db with subcommands
@@ -198,10 +202,10 @@ def main() -> None:
         try:
             run(
                 verbose=args.verbose,
-                url=args.url,
-                language=args.language,
-                subject=args.subject,
-                ignore_accents=args.permissive,
+                url=getattr(args, "url", None),
+                language=getattr(args, "language", None),
+                subject=getattr(args, "subject", None),
+                ignore_accents=getattr(args, "permissive", None),
             )
             sys.exit(0)
         except KeyboardInterrupt:

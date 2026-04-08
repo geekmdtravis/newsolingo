@@ -17,6 +17,7 @@ dependencies = [
 
 [project.scripts]
 newsolingo = "newsolingo.__main__:main"
+nlingo = "newsolingo.__main__:main"
 
 [build-system]
 requires = ["hatchling"]

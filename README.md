@@ -6,8 +6,46 @@ A language learning CLI that fetches real-world articles and creates CEFR-adapte
 
 > **Note:** This project is in active development. Feedback and contributions welcome!
 
+## Quick Start
+
+Follow these steps to get Newsolingo running on your system:
+
+1. **Install system dependencies** (required for web‑scraping):
+   - *Prerequisite:* Make sure you have Python 3.11 or newer (`python3 --version`).
+   - **Ubuntu/Debian:** `sudo apt install libxml2‑dev libxslt1‑dev python3‑venv`
+   - **Fedora/RHEL:** `sudo dnf install libxml2‑devel libxslt‑devel python3‑virtualenv`
+   - **macOS (Homebrew):** `brew install libxml2 libxslt`
+
+2. **Clone the repository and enter it:**
+   ```bash
+   git clone https://github.com/geekmdtravis/newsolingo.git
+   cd newsolingo
+   ```
+
+3. **Create a Python virtual environment and install dependencies:**
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   pip install -e .
+   ```
+
+4. **Set up your LLM API key** (easiest: use DeepSeek’s free tier):
+   ```bash
+   export DEEPSEEK_API_KEY="your‑api‑key‑here"
+   ```
+   *Sign up at [deepseek.com](https://platform.deepseek.com) to get a free API key.*
+
+5. **Add a language and run your first session:**
+   ```bash
+   newsolingo config add‑language   # Follow the interactive wizard
+   newsolingo run
+   ```
+
+That’s it! You’ll be guided through selecting a language, choosing a subject, reading an adapted article, translating it, and answering comprehension questions.
+
 ## Table of Contents
 
+- [Quick Start](#quick-start)
 - [Overview](#overview)
 - [Features](#features)
 - [Installation](#installation)
@@ -17,6 +55,7 @@ A language learning CLI that fetches real-world articles and creates CEFR-adapte
 - [How It Works](#how-it-works)
 - [Development](#development)
 - [Testing](#testing)
+- [Troubleshooting / FAQ](#troubleshooting--faq)
 - [License](#license)
 - [Acknowledgments](#acknowledgments)
 
@@ -43,34 +82,76 @@ The system tracks your progress across sessions, suggests when you’re ready to
 
 ### From source (recommended)
 
-1. Clone the repository:
+#### 0. Check your Python version
 
-   ```bash
-   git clone https://github.com/geekmdtravis/newsolingo.git
-   cd newsolingo
-   ```
+Newsolingo requires Python **3.11 or newer**. Open a terminal and run:
 
-2. Create a virtual environment and install dependencies:
+```bash
+python3 --version
+```
 
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate
-   pip install -e .
-   ```
+If you see a version like `Python 3.11.x` or higher, you’re good to go. If not, install Python 3.11 from your distribution’s package manager (e.g., `sudo apt install python3.11` on Ubuntu) or from [python.org](https://www.python.org/).
 
-   Or, if you use `uv`:
+#### 1. Install system dependencies
 
-   ```bash
-   uv venv
-   uv sync
-   source .venv/bin/activate
-   ```
+Newsolingo uses `trafilatura` for web‑scraping, which requires `libxml2` and `libxslt` development libraries.
+
+- **Ubuntu/Debian:**
+  ```bash
+  sudo apt install libxml2‑dev libxslt1‑dev python3‑venv
+  ```
+- **Fedora/RHEL:**
+  ```bash
+  sudo dnf install libxml2‑devel libxslt‑devel python3‑virtualenv
+  ```
+- **macOS (Homebrew):**
+  ```bash
+  brew install libxml2 libxslt
+  ```
+
+#### 3. Clone the repository
+
+```bash
+git clone https://github.com/geekmdtravis/newsolingo.git
+cd newsolingo
+```
+
+#### 4. Create a virtual environment and install Python dependencies
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+# If 'pip' is not found, try 'pip3' instead:
+pip install -e .
+```
+
+Alternatively, if you prefer [`uv`](https://github.com/astral-sh/uv):
+
+```bash
+uv venv
+uv sync
+source .venv/bin/activate
+```
+
+#### 5. Verify the installation
+
+After activation, you can use either `newsolingo` or the shorter alias `nlingo`:
+
+```bash
+newsolingo run
+# or
+nlingo run
+```
+
+If the command is not found, make sure your virtual environment is active (you should see `(.venv)` in your shell prompt). **Remember:** you need to run `source .venv/bin/activate` each time you open a new terminal window.
 
 ### From PyPI (future)
 
 ```bash
 pip install newsolingo
 ```
+
+After installation, both `newsolingo` and `nlingo` commands will be available.
 
 ## Configuration
 
@@ -113,6 +194,37 @@ exercise:
   max_adapted_length: 2000
 ```
 
+### Setting up your LLM API key
+
+Newsolingo needs an LLM (Large Language Model) to adapt articles and grade your answers. The easiest way to get started is with **DeepSeek**, which offers a free tier.
+
+1. **Sign up for an API key:**
+   - Go to [DeepSeek Platform](https://platform.deepseek.com) and create an account.
+   - Navigate to the “API Keys” section and create a new key.
+   - Copy the key (it will look like `sk‑xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`).
+
+2. **Make the key available to Newsolingo:**
+   - **Option A (recommended):** Set an environment variable in your shell:
+     ```bash
+     export DEEPSEEK_API_KEY="your‑key‑here"
+     ```
+     To make it permanent, add the line above to your `~/.bashrc` or `~/.zshrc` file and restart your terminal.
+   - **Option B:** Place the key directly in your `config.yaml`:
+     ```yaml
+     llm:
+       provider: "deepseek"
+       deepseek:
+         api_key: "sk‑xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+     ```
+
+3. **Test the connection:**
+   ```bash
+   newsolingo config show
+   ```
+   If the LLM health check passes, you’re ready to go.
+
+> **Other providers:** If you prefer OpenRouter or a local llama.cpp server, see the table below.
+
 ### LLM providers
 
 | Provider   | Required setting                     | Notes                                                                 |
@@ -127,6 +239,8 @@ Use the interactive wizard:
 
 ```bash
 newsolingo config add-language
+# or
+nlingo config add-language
 ```
 
 Or edit `config.yaml` manually:
@@ -143,10 +257,14 @@ languages:
 
 ## Usage
 
+After installation, two commands are available: `newsolingo` (full name) and `nlingo` (short alias). Both execute the same program.
+
 ### Interactive session (default)
 
 ```bash
 newsolingo run
+# or
+nlingo run
 ```
 
 You will be guided through:
@@ -164,6 +282,8 @@ Practice with a specific article:
 
 ```bash
 newsolingo run --url "https://example.com/article" --language pt_br
+# or
+nlingo run --url "https://example.com/article" --language pt_br
 ```
 
 The article will be scraped and adapted to the level configured for that language.
@@ -173,21 +293,31 @@ The article will be scraped and adapted to the level configured for that languag
 ```bash
 # Show current configuration
 newsolingo config show
+# or
+nlingo config show
 
 # Set a configuration value (dot notation)
 newsolingo config set llm.provider deepseek
+# or
+nlingo config set llm.provider deepseek
 
 # Edit config file with $EDITOR
 newsolingo config edit
+# or
+nlingo config edit
 
 # Interactive language‑addition wizard
 newsolingo config add-language
+# or
+nlingo config add-language
 ```
 
 ### Reset database
 
 ```bash
 newsolingo run --reset-db
+# or
+nlingo run --reset-db
 ```
 
 Deletes all session history and article cache. You will be prompted for confirmation.
@@ -290,6 +420,34 @@ Unit tests are located in `tests/`. Integration tests require a working LLM prov
 * Database operations
 * LLM health checks
 * Exercise generation (with mocked LLM responses)
+
+## Troubleshooting / FAQ
+
+### “LLM health check failed”
+- **Cause:** Missing or incorrect API key, network issue, or provider misconfiguration.
+- **Fix:** Verify your API key is set (run `echo $DEEPSEEK_API_KEY`). Check that `llm.provider` in your config matches the provider you intend to use. If using a local llama.cpp server, ensure it’s running and accessible at the `base_url`.
+
+### “No articles found for selected language/subject”
+- **Cause:** The source websites may be temporarily unavailable, or your language/subject combination has no sources defined.
+- **Fix:** Run `newsolingo config show` to see which subjects are available for your language. If none appear, add more sources in `sources/<language_code>.yaml`.
+
+### “Trafilatura extraction error”
+- **Cause:** Missing system libraries (`libxml2`, `libxslt`).
+- **Fix:** Install the development packages as described in [Installation](#installation).
+
+### “Command not found: newsolingo”
+- **Cause:** The Python virtual environment is not active.
+- **Fix:** Make sure you are inside the `newsolingo` directory and run `source .venv/bin/activate`. Your shell prompt should show `(.venv)`.
+
+### “Database permission error”
+- **Cause:** Newsolingo cannot write to `~/.local/share/newsolingo/`.
+- **Fix:** Check that the directory exists and you have write permissions. You can also change the data directory via the `XDG_DATA_HOME` environment variable.
+
+### “My translation/answer wasn’t graded correctly”
+- **Cause:** LLM assessments can occasionally be subjective or miss nuance.
+- **Fix:** Use the `--verbose` flag to see the raw LLM response. You can also adjust the grading rubrics by modifying the prompts in `newsolingo/llm/prompts.py` (advanced).
+
+For more help, open an issue on the [GitHub repository](https://github.com/geekmdtravis/newsolingo/issues).
 
 ## License
 
