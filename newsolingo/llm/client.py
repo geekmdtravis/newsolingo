@@ -198,6 +198,40 @@ class LLMClient:
         logger.debug("LLM response: %s chars", len(content))
         return content
 
+    def chat_completion(
+        self,
+        messages: list[dict[str, str]],
+        temperature: float = 0.7,
+        max_tokens: int = 4096,
+    ) -> str:
+        """Send a chat completion with custom messages list.
+
+        Args:
+            messages: List of message dicts with 'role' and 'content' keys
+            temperature: Sampling temperature (0-2)
+            max_tokens: Maximum tokens in the response
+
+        Returns:
+            The assistant's response text
+        """
+        logger.debug(
+            "LLM request: provider=%s, model=%s, messages=%d",
+            self.config.llm.provider,
+            self._model,
+            len(messages),
+        )
+
+        response = self._client.chat.completions.create(
+            model=self._model,
+            messages=messages,
+            temperature=temperature,
+            max_tokens=max_tokens,
+        )
+
+        content = response.choices[0].message.content or ""
+        logger.debug("LLM response: %s chars", len(content))
+        return content
+
     def chat_json(
         self,
         system_prompt: str,

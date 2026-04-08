@@ -29,6 +29,7 @@ from newsolingo.llm.client import LLMClient
 from newsolingo.storage.database import Database
 from newsolingo.storage.models import AdaptedArticle, SessionResult
 from newsolingo.storage.progress import get_progress_report
+from newsolingo.storage.session_export import save_session_markdown
 
 logger = logging.getLogger(__name__)
 console = Console()
@@ -612,6 +613,13 @@ def run_session(
 
     # Step 11: Show progress
     _display_progress(db, config, lang_code)
+
+    # Step 12: Save session for later review
+    try:
+        saved_path = save_session_markdown(session_result)
+        logger.debug("Session saved to %s", saved_path)
+    except Exception as e:
+        logger.warning("Failed to save session: %s", e)
 
 
 def run(

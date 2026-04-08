@@ -117,6 +117,33 @@ def main() -> None:
         help="Edit configuration file with $EDITOR",
     )
 
+    # Session command
+    session_parser = subparsers.add_parser(
+        "session",
+        help="Manage and review saved sessions",
+    )
+    session_subparsers = session_parser.add_subparsers(
+        dest="session_command",
+        help="Session subcommands",
+    )
+
+    # Session list
+    session_subparsers.add_parser(
+        "list",
+        help="List saved sessions",
+    )
+
+    # Session chat
+    chat_parser = session_subparsers.add_parser(
+        "chat",
+        help="Start interactive chat about a saved session",
+    )
+    chat_parser.add_argument(
+        "session_id",
+        type=int,
+        help="Session ID or filename (from 'session list')",
+    )
+
     args = parser.parse_args()
 
     # Validate URL/language combination
@@ -171,6 +198,77 @@ def main() -> None:
             sys.exit(config_edit())
         else:
             config_parser.print_help()
+            sys.exit(1)
+
+    # Handle session subcommands
+    if args.command == "session":
+        try:
+            from newsolingo.config import load_config
+            from newsolingo.llm.client import LLMClient
+            from newsolingo.review.chat import interactive_chat
+            from newsolingo.storage.session_export import (
+                list_sessions,
+                load_session_markdown,
+            )
+        except ImportError as e:
+            print(f"Failed to import session module: {e}")
+            sys.exit(1)
+
+        if args.session_command == "list":
+            sessions = list_sessions()
+            if not sessions:
+                print("No saved sessions found.")
+                sys.exit(0)
+
+            print(f"Found {len(sessions)} saved sessions:\n")
+            for i, sess in enumerate(sessions, 1):
+                print(f"{i}. Session {sess.get('id', '?')}")
+                print(f"   Language: {sess.get('language_code', 'Unknown')}")
+                print(f"   Level: {sess.get('level', 'Unknown')}")
+                print(f"   Score: {sess.get('overall_score', 0):.1f}/100")
+                print(f"   Date: {sess.get('created_at', 'Unknown')}")
+                print(f"   File: {sess.get('filename', 'Unknown')}")
+                print()
+            sys.exit(0)
+
+        elif args.session_command == "chat":
+            if not args.session_id:
+                print("Error: session_id required")
+                session_parser.print_help()
+                sys.exit(1)
+
+            # Load config and LLM client
+            try:
+                config = load_config()
+                llm_client = LLMClient(config)
+                # Verify LLM health
+                health = llm_client.health_check()
+                if not health["ok"]:
+                    print(f"LLM server is not reachable: {health['error']}")
+                    sys.exit(1)
+            except Exception as e:
+                print(f"Failed to initialize LLM: {e}")
+                sys.exit(1)
+
+            # Load session markdown
+            markdown = load_session_markdown(args.session_id)
+            if not markdown:
+                print(f"Session {args.session_id} not found.")
+                sys.exit(1)
+
+            # Start interactive chat
+            try:
+                interactive_chat(markdown, llm_client, config, args.session_id)
+                sys.exit(0)
+            except KeyboardInterrupt:
+                print("\nChat interrupted.")
+                sys.exit(0)
+            except Exception as e:
+                print(f"Error during chat: {e}")
+                sys.exit(1)
+
+        else:
+            session_parser.print_help()
             sys.exit(1)
 
     # Handle run command (or default)
