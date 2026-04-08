@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import logging
+import os
 import random
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -11,6 +13,56 @@ from typing import Any
 import yaml
 
 logger = logging.getLogger(__name__)
+
+
+def get_xdg_data_dir() -> Path:
+    """Return the XDG data directory for newsolingo.
+
+    Follows XDG Base Directory Specification:
+    - $XDG_DATA_HOME (default: ~/.local/share)
+    - Creates newsolingo subdirectory
+    """
+    data_home = os.environ.get("XDG_DATA_HOME")
+    if not data_home:
+        data_home = Path.home() / ".local" / "share"
+    else:
+        data_home = Path(data_home)
+
+    app_dir = data_home / "newsolingo"
+    app_dir.mkdir(parents=True, exist_ok=True)
+    return app_dir
+
+
+def get_xdg_sources_dir() -> Path:
+    """Return the XDG sources directory for newsolingo."""
+    return get_xdg_data_dir() / "sources"
+
+
+def get_package_sources_dir() -> Path:
+    """Return the sources directory in the package (repo default sources)."""
+    return Path(__file__).parent.parent.parent / "sources"
+
+
+def ensure_default_sources() -> None:
+    """Copy default sources from package to XDG directory if they don't exist."""
+    xdg_sources = get_xdg_sources_dir()
+    package_sources = get_package_sources_dir()
+
+    if xdg_sources.exists() and any(xdg_sources.glob("*.yaml")):
+        return
+
+    if not package_sources.exists():
+        logger.warning("Package sources directory not found: %s", package_sources)
+        return
+
+    xdg_sources.mkdir(parents=True, exist_ok=True)
+
+    for yaml_file in package_sources.glob("*.yaml"):
+        dest = xdg_sources / yaml_file.name
+        if not dest.exists():
+            shutil.copy2(yaml_file, dest)
+            logger.info("Copied default sources: %s -> %s", yaml_file, dest)
+
 
 # Look for sources directory relative to the project root
 SOURCES_DIR = Path(__file__).parent.parent.parent / "sources"
@@ -77,8 +129,16 @@ def load_sources(sources_dir: Path | None = None) -> SourceRegistry:
     """Load all source YAML files from the sources directory.
 
     Each YAML file is named after the language code (e.g., pt_br.yaml, he.yaml).
+
+    If sources_dir is not provided, uses XDG data directory and copies
+    default sources from the package if they don't exist.
     """
-    directory = sources_dir or SOURCES_DIR
+    if sources_dir is None:
+        ensure_default_sources()
+        directory = get_xdg_sources_dir()
+    else:
+        directory = sources_dir
+
     sources: dict[str, dict[str, list[Source]]] = {}
 
     if not directory.exists():
