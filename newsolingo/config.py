@@ -4,16 +4,14 @@ from __future__ import annotations
 
 import os
 import re
-import shutil
 from pathlib import Path
 from typing import Any
 
 import yaml
 from pydantic import BaseModel, field_validator
 
-
 # CEFR levels in order, including pre-A1 for absolute beginners
-CEFR_LEVELS = ["pre-A1", "A1", "A2", "B1", "B2", "C1", "C2"]
+CEFR_LEVELS = ["pre-A1a", "pre-A1b", "A1", "A2", "B1", "B2", "C1", "C2"]
 
 
 def _expand_env_vars(value: Any) -> Any:
@@ -67,7 +65,7 @@ user:
 # Add languages you want to practice. Each language needs:
 # - code: short identifier (e.g., 'pt_br', 'es', 'fr')
 # - name: display name
-# - level: CEFR level (pre-A1, A1, A2, B1, B2, C1, C2)
+# - level: CEFR level (pre-A1a, pre-A1b, A1, A2, B1, B2, C1, C2)
 # - subjects: list of topics you're interested in
 # Example:
 # pt_br:

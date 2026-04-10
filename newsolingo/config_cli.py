@@ -3,21 +3,20 @@
 from __future__ import annotations
 
 import os
-import sys
 import subprocess
 from typing import Any
 
 import yaml
 from rich.console import Console
-from rich.syntax import Syntax
 from rich.panel import Panel
+from rich.syntax import Syntax
 
 from newsolingo.config import (
+    CEFR_LEVELS,
     AppConfig,
-    load_config,
     ensure_config_exists,
     get_xdg_config_path,
-    CEFR_LEVELS,
+    load_config,
 )
 
 console = Console()
@@ -120,7 +119,7 @@ def config_add_language() -> int:
                 "You'll need to provide:\n"
                 "1. Language code (e.g., 'pt_br', 'es', 'fr')\n"
                 "2. Display name\n"
-                "3. CEFR level (pre-A1, A1, A2, B1, B2, C1, C2)\n"
+                "3. CEFR level (pre-A1a, pre-A1b, A1, A2, B1, B2, C1, C2)\n"
                 "4. Subjects (comma-separated topics)",
                 border_style="cyan",
             )
@@ -164,7 +163,7 @@ def config_add_language() -> int:
                     f"[red]Invalid level. Must be one of: {', '.join(CEFR_LEVELS)}[/red]"
                 )
             except (ValueError, IndexError):
-                console.print(f"[red]Invalid selection[/red]")
+                console.print("[red]Invalid selection[/red]")
 
         # Get subjects
         subjects_input = console.input(

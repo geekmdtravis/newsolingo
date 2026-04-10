@@ -7,11 +7,23 @@ from newsolingo.languages.registry import get_language_info
 
 # CEFR level descriptions to help the LLM understand what each level means
 CEFR_DESCRIPTIONS = {
-    "pre-A1": (
-        "Absolute beginner. Use only the most basic words (10-50 word vocabulary). "
-        "Write 2-4 very short sentences maximum. Use only present tense. "
+    "pre-A1a": (
+        "Absolute beginner. Use only the most basic words (10-20 word vocabulary). "
+        "Choose words from what be among the most common."
+        "Write 1-2 very short sentences maximum. Use only present tense. "
         "Use only subject-verb-object structure. No complex grammar at all. "
-        "Include transliterations for non-Latin scripts."
+        "Include transliterations for non-Latin scripts and nikkud on Hebrew letters."
+        "The goal is to build a very basic vocabulary foundation and simple sentence structure only."
+        "Choose what should be the top 20 most useful beginner words in the language as the core of the exercises."
+    ),
+    "pre-A1b": (
+        "Absolute beginner. Use only the most basic words (20-50 word vocabulary). "
+        "Choose words from what be among the most common."
+        "Write 2-3 very short sentences maximum. Use only present tense. "
+        "Use only subject-verb-object structure. No complex grammar at all. "
+        "Include transliterations for non-Latin scripts and nikkud on Hebrew letters."
+        "The goal is to add to the very basic vocabulary foundation and simple sentence structure only."
+        "Choose what should be the top 50 most useful beginner words in the language as the core of the exercises."
     ),
     "A1": (
         "Beginner. Use basic everyday vocabulary (up to ~500 words). "
@@ -65,9 +77,9 @@ Rules:
 1. Keep text in {lang_name}. Do NOT translate to English.
 2. Simplify vocabulary and grammar to match {level}.
 3. Preserve the core meaning of the article.
-4. Adapted text MUST be short: 3-6 sentences for pre-A1/A1, 1-2 short paragraphs for A2/B1, 2-3 paragraphs for B2+.
+4. Adapted text MUST be short: 1-2 sentences for pre-A1, 3-5 sentences for A1, 1-2 short paragraphs for A2/B1, 2-3 paragraphs for B2+.
 5. Vocabulary list: exactly 5-8 key terms maximum.
-6. For Hebrew pre-A1/A1: add nikkud (vowel marks).
+6. For Hebrew pre-A1a/pre-A1b/A1: add nikkud (vowel marks).
 
 Respond ONLY with compact JSON (no extra whitespace):
 {{"adapted_text":"...","vocabulary":[{{"term":"...","translation":"...","context":"..."}}]}}"""
@@ -147,9 +159,11 @@ Rules:
 2. Questions should test understanding of the article's content.
 3. Mix question types: factual recall, inference, opinion/reaction.
 4. The student will answer in {lang_name}, so make questions that encourage writing practice.
-5. For pre-A1/A1: use very simple yes/no or one-word-answer questions.
-6. For B1+: use open-ended questions requiring sentences.
-7. For Hebrew at pre-A1/A1: include transliteration of the questions.
+5. For pre-A1a and pre-A1b: use very simple yes/no or one-word-answer questions; emphasis on vocabulary building.
+6. For A1: use very simple yes/no or one-word-answer questions.
+7. For A2: use simple questions that may require short phrases or sentences.
+8. For B1+: use open-ended questions requiring sentences.
+9. For Hebrew at pre-A1a/pre-A1b: include transliteration of the questions.
 
 You MUST respond in valid JSON with this exact structure:
 {{

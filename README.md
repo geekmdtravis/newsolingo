@@ -175,7 +175,7 @@ languages:
       - geopolitics
   he:
     name: "Hebrew"
-    level: "pre-A1"
+    level: "pre-A1a"
     subjects:
       - biblical_hebrew
 
