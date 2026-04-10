@@ -8,51 +8,53 @@ from newsolingo.languages.registry import get_language_info
 # CEFR level descriptions to help the LLM understand what each level means
 CEFR_DESCRIPTIONS = {
     "pre-A1a": (
-        "Absolute beginner. Use only the most basic words (10-20 word vocabulary). "
-        "Choose words from what be among the most common."
-        "Write 1-2 very short sentences maximum. Use only present tense. "
-        "Use only subject-verb-object structure. No complex grammar at all. "
-        "The goal is to build a very basic vocabulary foundation and simple sentence structure only."
-        "Choose what should be the top 20 most useful beginner words in the language as the core of the exercises."
+        "Absolute beginner. Use only the most essential beginner words, roughly from a core vocabulary of about 10-20 words. "
+        "Write only 1-2 very short sentences. Use present tense only. "
+        "Use only simple subject-verb-object patterns and the most basic statements. "
+        "Avoid subordinate clauses, idioms, abstract language, and complex grammar. "
+        "The goal is recognition and repetition of the most useful beginner words only."
     ),
     "pre-A1b": (
-        "Absolute beginner. Use only the most basic words (20-50 word vocabulary). "
-        "Choose words from what be among the most common."
-        "Write 2-3 very short sentences maximum. Use only present tense. "
-        "Use only subject-verb-object structure. No complex grammar at all. "
-        "The goal is to add to the very basic vocabulary foundation and simple sentence structure only."
-        "Choose what should be the top 50 most useful beginner words in the language as the core of the exercises."
+        "Absolute beginner. Use only the most essential beginner words, roughly from a core vocabulary of about 20-50 words. "
+        "Write only 2-3 very short sentences. Use present tense only. "
+        "Use only very simple sentence patterns. "
+        "Avoid subordinate clauses, idioms, abstract language, and complex grammar. "
+        "The goal is to expand the earliest beginner vocabulary while keeping grammar extremely simple."
     ),
     "A1": (
-        "Beginner. Use basic everyday vocabulary (up to ~500 words). "
-        "Write short, simple sentences. Use present tense mainly. "
-        "Topics: self, family, immediate environment. Simple descriptions only."
+        "Beginner. Use very common everyday vocabulary, roughly within the first 300-500 words a learner is likely to know. "
+        "Write short and simple sentences. Use mainly present tense, with only very basic past or future if truly necessary. "
+        "Focus on concrete topics such as people, places, daily routine, food, family, and basic actions. "
+        "Avoid idioms, dense clauses, and advanced connectors."
     ),
     "A2": (
-        "Elementary. Use common everyday expressions and basic phrases. "
-        "Short paragraphs are okay. Simple past and future tenses allowed. "
-        "Can describe background, immediate environment, routine matters."
+        "Elementary. Use common everyday expressions and high-frequency vocabulary. "
+        "Short paragraphs are acceptable. Use simple present, past, and future where helpful. "
+        "The learner can handle routine matters, simple descriptions, and basic explanations. "
+        "Keep syntax straightforward and avoid unnecessary complexity."
     ),
     "B1": (
-        "Intermediate. Use standard vocabulary for familiar topics. "
-        "Multiple paragraphs are fine. Use a range of tenses. "
-        "Can express opinions, describe experiences, give reasons. "
-        "Connected text on topics of personal interest."
+        "Intermediate. Use standard vocabulary for familiar topics and clear connected prose. "
+        "Multiple short paragraphs are acceptable. Use a normal range of tenses. "
+        "The learner can understand main points, describe experiences, express opinions, and give simple reasons. "
+        "Use natural but not highly specialized language."
     ),
     "B2": (
-        "Upper intermediate. Use a broad vocabulary including some specialized terms. "
-        "Complex sentence structures allowed. Use subjunctive, conditionals, passive voice. "
-        "Can present clear, detailed text on a wide range of subjects."
+        "Upper intermediate. Use a broad vocabulary, including some lower-frequency and topic-specific terms when needed. "
+        "Complex sentence structures are acceptable, but remain readable. "
+        "The learner can follow clear, detailed text and more nuanced explanations. "
+        "Use natural connectors, some abstraction, and moderate stylistic variety."
     ),
     "C1": (
-        "Advanced. Use rich, sophisticated vocabulary including idiomatic expressions. "
-        "Complex grammatical structures freely. Nuanced expression. "
-        "Can produce clear, well-structured, detailed text on complex subjects."
+        "Advanced. Use rich, precise vocabulary and natural idiomatic phrasing where appropriate. "
+        "Use complex grammatical structures freely. "
+        "The learner can handle nuance, implied meaning, and detailed argumentation. "
+        "Write natural, fluent text with clear structure."
     ),
     "C2": (
-        "Mastery. Native-like proficiency. Use the full range of the language. "
-        "Colloquialisms, subtle nuances, literary references all acceptable. "
-        "Near-native text that reads naturally."
+        "Mastery. Use the full natural range of the language. "
+        "Colloquialisms, subtle shades of meaning, stylistic variation, and culturally natural phrasing are acceptable. "
+        "Write as an educated native speaker might, while remaining clear and coherent."
     ),
 }
 
@@ -61,34 +63,102 @@ LANGUAGE_NAMES = {
 }
 
 
+def _length_guidance(level: str) -> str:
+    if level in {"pre-A1a", "pre-A1b"}:
+        return "Keep the adapted text extremely short: 1-3 very short sentences."
+    if level == "A1":
+        return "Keep the adapted text short: about 3-5 short sentences."
+    if level in {"A2", "B1"}:
+        return "Keep the adapted text concise: about 1-2 short paragraphs."
+    return "Keep the adapted text concise but complete: about 2-3 short paragraphs."
+
+
+def _vocab_guidance(level: str) -> str:
+    if level == "pre-A1a":
+        return (
+            "Prefer only the most useful beginner words. Stay close to a tiny core vocabulary. "
+            "If the source is too hard, rewrite aggressively rather than preserving difficult wording."
+        )
+    if level == "pre-A1b":
+        return (
+            "Prefer only very common beginner words. Stay close to an early learner vocabulary. "
+            "If the source is too hard, rewrite aggressively rather than preserving difficult wording."
+        )
+    if level == "A1":
+        return "Prefer very common words over precise but rare words."
+    if level == "A2":
+        return "Prefer common words and short clauses; introduce only light variation."
+    if level == "B1":
+        return "Use mostly common words with some natural variety."
+    if level == "B2":
+        return (
+            "Use a broad vocabulary, but avoid being unnecessarily literary or obscure."
+        )
+    if level == "C1":
+        return "Use precise and natural vocabulary, including some idiomatic phrasing where helpful."
+    return "Use fully natural vocabulary and style appropriate for an educated native speaker."
+
+
 def adapt_article_system_prompt(language_code: str, level: str) -> str:
     """System prompt for adapting an article to a CEFR level."""
     lang_name = LANGUAGE_NAMES.get(language_code, language_code)
     level_desc = CEFR_DESCRIPTIONS.get(level, "Intermediate level")
+    lang_info = get_language_info(language_code)
 
-    return f"""You adapt {lang_name} articles for CEFR {level} learners.
+    script_instruction = ""
+    if lang_info and lang_info.script != "latin":
+        script_instruction = f"7. Keep the main text in {lang_name} script. Also provide transliteration in the vocabulary entries when useful.\n"
 
+    return f"""You adapt source material into learner-friendly {lang_name} for a CEFR {level} student.
+
+Level target:
 {level}: {level_desc}
 
-Rules:
-1. Keep text in {lang_name}. Do NOT translate to English.
-2. Simplify vocabulary and grammar to match {level}.
-3. Preserve the core meaning of the article.
-4. Adapted text MUST be short: 1-2 sentences for pre-A1, 3-5 sentences for A1, 1-2 short paragraphs for A2/B1, 2-3 paragraphs for B2+.
-5. Vocabulary list: exactly 5-8 key terms maximum.
+Your job:
+- Rewrite the text so it is genuinely readable for this level.
+- Preserve the core meaning and the most important facts.
+- Remove or simplify details that are too difficult for this level.
+- Do NOT translate into English.
+- Do NOT explain your choices.
+- Do NOT add information that was not in the source.
 
-Respond ONLY with compact JSON (no extra whitespace):
-{{"adapted_text":"...","vocabulary":[{{"term":"...","translation":"...","context":"..."}}]}}"""
+Difficulty guidance:
+- {_length_guidance(level)}
+- {_vocab_guidance(level)}
+
+Rules:
+1. Output only in {lang_name}.
+2. Match the grammar, vocabulary, and sentence complexity to CEFR {level}.
+3. Preserve the main idea and key facts, but simplify aggressively when needed.
+4. Prefer short, clear sentences over fidelity to the original wording.
+5. Vocabulary list must contain exactly 5-8 useful terms from the adapted text.
+6. Each vocabulary item must be genuinely useful for a learner at this level.
+{script_instruction}Return valid compact JSON only, with this exact schema:
+{{"adapted_text":"...","vocabulary":[{{"term":"...","translation":"...","context":"..."}}]}}
+
+Requirements for the JSON:
+- No markdown
+- No code fences
+- No commentary
+- No extra keys
+- The JSON must parse exactly
+"""
 
 
 def adapt_article_user_prompt(original_text: str, max_length: int = 2000) -> str:
     """User prompt for article adaptation."""
-    # Truncate articles aggressively to leave room for the response in limited context
     if len(original_text) > 2000:
         original_text = original_text[:2000] + "\n[truncated]"
 
-    return f"""Adapt this article. Keep adapted_text under {max_length} chars. Output valid JSON only.
+    return f"""Rewrite the following source text for the target learner level.
 
+Constraints:
+- Keep adapted_text under {max_length} characters.
+- Preserve the main meaning and the key facts.
+- Make the text feel natural for the learner level, not merely shortened.
+- Return valid JSON only.
+
+SOURCE TEXT:
 {original_text}"""
 
 
@@ -102,40 +172,43 @@ def assess_translation_system_prompt(
     accent_instruction = ""
     if ignore_accents and lang_info:
         if lang_info.script == "latin":
-            accent_instruction = "\n\n**Important**: The student may omit accents (e.g., write 'a' instead of 'á'). This is acceptable - do not penalize for missing accents."
+            accent_instruction = "\nAccent policy: Missing accents alone should not reduce the score unless they create confusion."
 
-    return f"""You are an expert language teacher assessing a student's translation from {lang_name} to English.
+    return f"""You are an expert language teacher assessing a student's translation from {lang_name} into English.
 
-The student is at CEFR level {level} in {lang_name}. Assess their translation considering their level.
+The student is at CEFR level {level}. Judge the translation according to that level, not native-speaker standards.
 
-Evaluate these dimensions:
-1. **Accuracy**: Did they correctly translate the meaning?
-2. **Nuance**: Did they capture subtleties, tone, and implied meanings?
-3. **Completeness**: Did they translate all the important content?{accent_instruction}
+What to assess:
+1. Accuracy: Did the student correctly transfer the meaning?
+2. Nuance: Did the student capture tone, implication, or shades of meaning when reasonable for this level?
+3. Completeness: Did the student include the important content?{accent_instruction}
 
-Be encouraging but honest. Note specific mistakes and explain what the correct interpretation would be.
-Adjust your expectations to the student's level - a B1 student won't catch every nuance, and that's okay.
+Scoring guidance:
+- Be encouraging but honest.
+- Do not over-penalize learners for natural beginner omissions that are beyond their level.
+- At lower levels, prioritize core meaning over polished phrasing.
+- At higher levels, expect more precision and nuance.
 
-You MUST respond in valid JSON with this exact structure:
+Return valid JSON only with exactly this structure:
 {{
     "score": <number 0-100>,
-    "accuracy": "Assessment of accuracy",
-    "nuance": "Assessment of nuance capture",
+    "accuracy": "Assessment of meaning accuracy",
+    "nuance": "Assessment of nuance and tone capture",
     "completeness": "Assessment of completeness",
-    "suggestions": "Specific suggestions for improvement",
-    "corrected_translation": "Your suggested English translation of the text"
+    "suggestions": "Specific, level-appropriate suggestions for improvement",
+    "corrected_translation": "A natural English translation of the source text"
 }}"""
 
 
 def assess_translation_user_prompt(adapted_text: str, user_translation: str) -> str:
     """User prompt for translation assessment."""
-    return f"""ORIGINAL TEXT (in the target language):
+    return f"""SOURCE TEXT:
 {adapted_text}
 
-STUDENT'S ENGLISH TRANSLATION:
+STUDENT TRANSLATION:
 {user_translation}
 
-Please assess the quality of this translation."""
+Assess the student's translation according to the required JSON schema."""
 
 
 def generate_questions_system_prompt(language_code: str, level: str) -> str:
@@ -143,25 +216,36 @@ def generate_questions_system_prompt(language_code: str, level: str) -> str:
     lang_name = LANGUAGE_NAMES.get(language_code, language_code)
     level_desc = CEFR_DESCRIPTIONS.get(level, "Intermediate level")
 
-    return f"""You are a language teacher creating comprehension questions in {lang_name} for a student at CEFR level {level}.
+    return f"""You are a language teacher creating comprehension questions in {lang_name} for a CEFR {level} student.
 
-Level description for {level}:
+Level guidance:
 {level_desc}
 
-Rules:
-1. Write ALL questions in {lang_name} at the appropriate level.
-2. Questions should test understanding of the article's content.
-3. Mix question types: factual recall, inference, opinion/reaction.
-4. The student will answer in {lang_name}, so make questions that encourage writing practice.
-5. For pre-A1a and pre-A1b: use very simple yes/no or one-word-answer questions; emphasis on vocabulary building.
-6. For A1: use very simple yes/no or one-word-answer questions.
-7. For A2: use simple questions that may require short phrases or sentences.
-8. For B1+: use open-ended questions requiring sentences.
+Goal:
+Create questions that the student can realistically answer at their level while reinforcing reading comprehension and output in {lang_name}.
 
-You MUST respond in valid JSON with this exact structure:
+Rules:
+1. Write all questions in {lang_name}.
+2. Base the questions only on the text provided.
+3. Make the difficulty truly match CEFR {level}.
+4. expected_answer_hint must be in English.
+5. Avoid trick questions.
+6. Keep wording simple enough for the learner level.
+
+Difficulty by level:
+- pre-A1a: only yes/no, either/or, or single-word questions; focus on recognizing basic words.
+- pre-A1b: mostly yes/no, either/or, or one- to two-word questions.
+- A1: simple factual questions answerable with one word, a short phrase, or a very short sentence.
+- A2: simple factual and personal-reaction questions answerable with short phrases or short sentences.
+- B1: mostly open questions requiring 1-2 sentences; include simple inference or opinion.
+- B2+: open-ended questions are fine; include inference, opinion, and interpretation.
+7. Generate a mix appropriate to the level, but do not force advanced question types for beginners.
+8. Keep each question short and clear.
+
+Return valid JSON only with exactly this structure:
 {{
     "questions": [
-        {{"question": "The question in {lang_name}", "expected_answer_hint": "Brief hint about what a good answer includes (in English)"}},
+        {{"question": "Question in {lang_name}", "expected_answer_hint": "Brief English hint"}},
         ...
     ]
 }}"""
@@ -169,12 +253,15 @@ You MUST respond in valid JSON with this exact structure:
 
 def generate_questions_user_prompt(adapted_text: str, num_questions: int) -> str:
     """User prompt for question generation."""
-    return f"""Based on the following text, generate {num_questions} comprehension questions.
+    return f"""Create exactly {num_questions} comprehension questions based only on the text below.
 
 TEXT:
 {adapted_text}
 
-Generate exactly {num_questions} questions. Remember to write them in the target language at the appropriate level."""
+Requirements:
+- Generate exactly {num_questions} questions.
+- Match the learner level.
+- Return valid JSON only."""
 
 
 def assess_answer_system_prompt(
@@ -187,25 +274,30 @@ def assess_answer_system_prompt(
     accent_instruction = ""
     if ignore_accents and lang_info:
         if lang_info.script == "latin":
-            accent_instruction = "\n\n**Important**: The student may omit accents (e.g., write 'a' instead of 'á'). This is acceptable - do not penalize for missing accents."
+            accent_instruction = "\nAccent policy: Missing accents alone should not reduce the score unless they create confusion."
 
     return f"""You are a {lang_name} language teacher assessing a student's answer to a comprehension question.
-The student is at CEFR level {level}.
 
-Evaluate:
-1. **Correctness**: Is the answer factually correct based on the text?
-2. **Grammar**: Is the {lang_name} grammar appropriate for their level?
-3. **Vocabulary**: Are they using appropriate vocabulary?{accent_instruction}
+The student is CEFR level {level}. Evaluate according to that level, not native-speaker standards.
 
-Be encouraging but honest. Provide specific corrections where needed.
-Grade on a scale of 0-100, considering their level.
+Assess:
+1. Correctness: Is the answer factually supported by the text?
+2. Grammar: Is the grammar appropriate for this learner's level?
+3. Vocabulary: Is the vocabulary appropriate and understandable for this level?{accent_instruction}
 
-You MUST respond in valid JSON with this exact structure:
+Scoring guidance:
+- Prioritize meaning first.
+- For lower levels, do not over-penalize short or telegraphic answers if they are correct.
+- For higher levels, expect more complete and accurate language.
+- Be encouraging but specific.
+- Correct only what matters most.
+
+Return valid JSON only with exactly this structure:
 {{
     "score": <number 0-100>,
-    "correctness": "Assessment of content correctness",
-    "grammar": "Assessment of grammar",
-    "feedback": "Overall feedback with specific suggestions"
+    "correctness": "Assessment of factual correctness",
+    "grammar": "Assessment of grammar for this level",
+    "feedback": "Brief, specific, encouraging feedback with corrections if needed"
 }}"""
 
 
@@ -225,7 +317,7 @@ QUESTION:
 EXPECTED ANSWER SHOULD INCLUDE:
 {expected_hint}
 
-STUDENT'S ANSWER:
+STUDENT ANSWER:
 {user_answer}
 
-Please assess this answer."""
+Assess the answer according to the required JSON schema."""
