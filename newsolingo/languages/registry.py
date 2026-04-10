@@ -12,7 +12,7 @@ class LanguageInfo:
     code: str
     name: str
     native_name: str
-    script: str  # "latin", "hebrew", "arabic", "cyrillic", etc.
+    script: str  # "latin", "arabic", "cyrillic", etc.
     direction: str  # "ltr" or "rtl"
 
 
@@ -24,13 +24,6 @@ LANGUAGES: dict[str, LanguageInfo] = {
         native_name="Portugu\u00eas Brasileiro",
         script="latin",
         direction="ltr",
-    ),
-    "he": LanguageInfo(
-        code="he",
-        name="Hebrew",
-        native_name="\u05e2\u05d1\u05e8\u05d9\u05ea",
-        script="hebrew",
-        direction="rtl",
     ),
 }
 

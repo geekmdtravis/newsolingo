@@ -12,7 +12,6 @@ CEFR_DESCRIPTIONS = {
         "Choose words from what be among the most common."
         "Write 1-2 very short sentences maximum. Use only present tense. "
         "Use only subject-verb-object structure. No complex grammar at all. "
-        "Include transliterations for non-Latin scripts and nikkud on Hebrew letters."
         "The goal is to build a very basic vocabulary foundation and simple sentence structure only."
         "Choose what should be the top 20 most useful beginner words in the language as the core of the exercises."
     ),
@@ -21,7 +20,6 @@ CEFR_DESCRIPTIONS = {
         "Choose words from what be among the most common."
         "Write 2-3 very short sentences maximum. Use only present tense. "
         "Use only subject-verb-object structure. No complex grammar at all. "
-        "Include transliterations for non-Latin scripts and nikkud on Hebrew letters."
         "The goal is to add to the very basic vocabulary foundation and simple sentence structure only."
         "Choose what should be the top 50 most useful beginner words in the language as the core of the exercises."
     ),
@@ -60,7 +58,6 @@ CEFR_DESCRIPTIONS = {
 
 LANGUAGE_NAMES = {
     "pt_br": "Brazilian Portuguese",
-    "he": "Hebrew",
 }
 
 
@@ -79,7 +76,6 @@ Rules:
 3. Preserve the core meaning of the article.
 4. Adapted text MUST be short: 1-2 sentences for pre-A1, 3-5 sentences for A1, 1-2 short paragraphs for A2/B1, 2-3 paragraphs for B2+.
 5. Vocabulary list: exactly 5-8 key terms maximum.
-6. For Hebrew pre-A1a/pre-A1b/A1: add nikkud (vowel marks).
 
 Respond ONLY with compact JSON (no extra whitespace):
 {{"adapted_text":"...","vocabulary":[{{"term":"...","translation":"...","context":"..."}}]}}"""
@@ -107,8 +103,6 @@ def assess_translation_system_prompt(
     if ignore_accents and lang_info:
         if lang_info.script == "latin":
             accent_instruction = "\n\n**Important**: The student may omit accents (e.g., write 'a' instead of 'á'). This is acceptable - do not penalize for missing accents."
-        elif lang_info.script == "hebrew":
-            accent_instruction = "\n\n**Important**: The student may use transliteration (Latin letters) instead of Hebrew script. This is acceptable - do not penalize for using transliteration."
 
     return f"""You are an expert language teacher assessing a student's translation from {lang_name} to English.
 
@@ -163,7 +157,6 @@ Rules:
 6. For A1: use very simple yes/no or one-word-answer questions.
 7. For A2: use simple questions that may require short phrases or sentences.
 8. For B1+: use open-ended questions requiring sentences.
-9. For Hebrew at pre-A1a/pre-A1b: include transliteration of the questions.
 
 You MUST respond in valid JSON with this exact structure:
 {{
@@ -195,8 +188,6 @@ def assess_answer_system_prompt(
     if ignore_accents and lang_info:
         if lang_info.script == "latin":
             accent_instruction = "\n\n**Important**: The student may omit accents (e.g., write 'a' instead of 'á'). This is acceptable - do not penalize for missing accents."
-        elif lang_info.script == "hebrew":
-            accent_instruction = "\n\n**Important**: The student may use transliteration (Latin letters) instead of Hebrew script. This is acceptable - do not penalize for using transliteration."
 
     return f"""You are a {lang_name} language teacher assessing a student's answer to a comprehension question.
 The student is at CEFR level {level}.

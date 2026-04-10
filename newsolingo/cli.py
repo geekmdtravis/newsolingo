@@ -302,8 +302,8 @@ def run_session(
     """Run a single interactive practice session.
 
     If ignore_accents is None (default), user will be asked interactively.
-    If ignore_accents is True, missing accents/transliteration are accepted.
-    If ignore_accents is False, strict mode requires accents/transliteration.
+    If ignore_accents is True, missing accents are accepted.
+    If ignore_accents is False, strict mode requires accents.
     """
     # Direct URL mode
     if url is not None:
@@ -323,16 +323,10 @@ def run_session(
         console.print(
             f"\n[bold]Language:[/bold] {lang_config.name} | [bold]Level:[/bold] {lang_config.level}"
         )
-        # Determine accent/transliteration handling
+        # Determine accent handling
         if ignore_accents is None:
-            lang_info = get_language_info(lang_code)
-            if lang_info and lang_info.script == "latin":
-                prompt_text = "Ignore missing accents in your answers? (e.g., á vs a)"
-            else:
-                prompt_text = "Accept transliteration in your answers? (e.g., Latin letters instead of original script)"
+            prompt_text = "Ignore missing accents in your answers? (e.g., á vs a)"
             ignore_accents = _ask_yes_no(prompt_text, default=True)
-        # else: use the provided ignore_accents value
-        # Fetch and adapt article from URL
         console.print("\n[yellow]Fetching and adapting article...[/yellow]")
         with console.status("[bold yellow]Scraping URL..."):
             article = prepare_reading_exercise(
@@ -421,15 +415,10 @@ def run_session(
             chosen_subject = _pick_option("Select subject:", subject_options)
             subject = None if chosen_subject == "Random" else chosen_subject
 
-        # Determine accent/transliteration handling
+        # Determine accent handling
         if ignore_accents is None:
-            lang_info = get_language_info(lang_code)
-            if lang_info and lang_info.script == "latin":
-                prompt_text = "Ignore missing accents in your answers? (e.g., á vs a)"
-            else:
-                prompt_text = "Accept transliteration in your answers? (e.g., Latin letters instead of original script)"
+            prompt_text = "Ignore missing accents in your answers? (e.g., á vs a)"
             ignore_accents = _ask_yes_no(prompt_text, default=True)
-        # else: use the provided ignore_accents value
 
         # Step 3: Fetch and adapt article
         console.print("\n[yellow]Fetching and adapting article...[/yellow]")
@@ -633,8 +622,8 @@ def run(
 
     If url and language are provided, runs a single session with that URL.
     If ignore_accents is None (default), user will be asked interactively.
-    If ignore_accents is True, missing accents/transliteration are accepted.
-    If ignore_accents is False, strict mode requires accents/transliteration.
+    If ignore_accents is True, missing accents are accepted.
+    If ignore_accents is False, strict mode requires accents.
     """
     _setup_logging(verbose)
 

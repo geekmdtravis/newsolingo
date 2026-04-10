@@ -13,13 +13,6 @@ languages:
       - programming
       - geopolitics
       - exercise_science
-  he:
-    name: "Hebrew"
-    level: "pre-A1a"
-    subjects:
-      - biblical_hebrew
-      - geopolitics
-      - programming
 
 llm:
   # Which provider to use: "llamacpp", "openrouter", or "deepseek"

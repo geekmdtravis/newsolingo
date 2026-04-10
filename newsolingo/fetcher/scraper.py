@@ -28,8 +28,6 @@ ARTICLE_PATH_PATTERNS = [
     r"/article",
     r"/news/.+",
     r"/noticias?/.+",
-    r"/כתבה/",  # Hebrew for article
-    r"/מאמר/",  # Hebrew for article
     r"\.html$",  # .html extension is almost always an article
     r"\.htm$",
     r"/\d+-",  # ID prefix patterns common in news sites

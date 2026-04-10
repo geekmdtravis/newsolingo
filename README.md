@@ -67,7 +67,7 @@ The system tracks your progress across sessions, suggests when you’re ready to
 
 ## Features
 
-* **Real‑world content** – Articles scraped from live websites in the target language (Linux, programming, geopolitics, exercise science, biblical Hebrew, etc.).
+* **Real‑world content** – Articles scraped from live websites in the target language (Linux, programming, geopolitics, exercise science, etc.).
 * **CEFR‑level adaptation** – Uses an LLM (DeepSeek, OpenRouter, or a local llama.cpp server) to rewrite articles at your current proficiency.
 * **Vocabulary panel** – Highlights key terms with translations and contextual examples.
 * **Translation exercise** – Submit your English translation and get an AI‑assessed score with accuracy, nuance, and completeness breakdowns.
@@ -173,11 +173,6 @@ languages:
       - linux
       - programming
       - geopolitics
-  he:
-    name: "Hebrew"
-    level: "pre-A1a"
-    subjects:
-      - biblical_hebrew
 
 llm:
   provider: "deepseek"
@@ -269,7 +264,7 @@ nlingo run
 
 You will be guided through:
 1. Language selection (if more than one configured)
-2. Subject selection (Random, Linux, Programming, Geopolitics, Exercise Science, Biblical Hebrew)
+2. Subject selection (Random, Linux, Programming, Geopolitics, Exercise Science)
 3. Article fetching and adaptation
 4. Reading exercise with vocabulary panel
 5. Translation to English (graded)
@@ -331,11 +326,6 @@ Currently included source definitions:
   * Programming (`tabnews.com.br`, `alura.com.br/artigos`, `dev.to/t/portuguese`)
   * Geopolitics (`bbc.com/portuguese`, `g1.globo.com/mundo`, `cartacapital.com.br/mundo`)
   * Exercise Science (`uol.com.br/vivabem`, `ge.globo.com/eu-atleta`)
-  * Biblical Hebrew (`estudosdabiblia.net`)
-
-* **Hebrew (`he`)**
-  * Biblical Hebrew (`balashon.com`, `safa-ivrit.org`)
-  * (Other subjects are intentionally empty because many Israeli sites block scraping.)
 
 You can add your own source YAML files in the `sources/` directory. Each file is named after the language code (e.g., `es.yaml`) and follows this structure:
 

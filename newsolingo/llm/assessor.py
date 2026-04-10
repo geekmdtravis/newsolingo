@@ -23,7 +23,6 @@ def assess_translation(
     user_translation: str,
     language_code: str,
     level: str,
-    ignore_accents: bool = True,
 ) -> TranslationAssessment:
     """Assess the quality of a user's English translation.
 
@@ -33,21 +32,17 @@ def assess_translation(
         user_translation: The user's English translation.
         language_code: The source language code.
         level: The user's CEFR level.
-        ignore_accents: Whether to ignore missing accents/accept transliteration.
 
     Returns:
         A TranslationAssessment with score and feedback.
     """
-    system_prompt = assess_translation_system_prompt(
-        language_code, level, ignore_accents
-    )
+    system_prompt = assess_translation_system_prompt(language_code, level)
     user_prompt = assess_translation_user_prompt(adapted_text, user_translation)
 
     logger.info(
-        "Assessing translation for %s at level %s (ignore_accents=%s)",
+        "Assessing translation for %s at level %s",
         language_code,
         level,
-        ignore_accents,
     )
 
     result = client.chat_json(system_prompt, user_prompt, temperature=0.3)
@@ -70,7 +65,6 @@ def assess_answer(
     expected_hint: str,
     language_code: str,
     level: str,
-    ignore_accents: bool = True,
 ) -> AnswerAssessment:
     """Assess the quality of a user's answer to a comprehension question.
 
@@ -82,21 +76,19 @@ def assess_answer(
         expected_hint: Hint about what the answer should contain.
         language_code: The target language code.
         level: The user's CEFR level.
-        ignore_accents: Whether to ignore missing accents/accept transliteration.
 
     Returns:
         An AnswerAssessment with score and feedback.
     """
-    system_prompt = assess_answer_system_prompt(language_code, level, ignore_accents)
+    system_prompt = assess_answer_system_prompt(language_code, level)
     user_prompt = assess_answer_user_prompt(
         adapted_text, question, user_answer, expected_hint
     )
 
     logger.info(
-        "Assessing answer for %s at level %s (ignore_accents=%s)",
+        "Assessing answer for %s at level %s",
         language_code,
         level,
-        ignore_accents,
     )
 
     result = client.chat_json(system_prompt, user_prompt, temperature=0.3)
